@@ -420,7 +420,8 @@
       e.preventDefault();
       sortTabs();
     });
-    document.documentElement.appendChild(btn);
+    const host = document.body || document.documentElement;
+    if (host) host.appendChild(btn);
     window.addEventListener(
       "unload",
       () => document.getElementById(FLOATING_BUTTON_ID)?.remove(),

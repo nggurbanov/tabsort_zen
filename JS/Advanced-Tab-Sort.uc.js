@@ -510,7 +510,7 @@
     },
     async ollama({ tabs, prefs, prompt }) {
       const cfg = prefs.ollama;
-      const url = `${cfg.host.replace(/\\/$/, "")}/api/chat`;
+      const url = `${cfg.host.replace(/\/$/, "")}/api/chat`;
       const body = {
         model: cfg.model,
         stream: false,

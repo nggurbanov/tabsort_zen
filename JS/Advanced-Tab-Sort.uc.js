@@ -623,6 +623,35 @@
       if (typeof atg.refresh === "function") atg.refresh();
       return { applied: true, via: "ATG" };
     }
+
+    // Fallback: try native tab-group elements if available to mimic ATG
+    const tabStrip = document.getElementById("tabbrowser-tabs");
+    const canGroup = tabStrip && typeof document.createElement === "function";
+    if (canGroup) {
+      const existing = Array.from(tabStrip.querySelectorAll("tab-group"));
+      const findGroupEl = (label) => existing.find((el) => el.getAttribute("label") === label);
+      const ensureGroupEl = (label) => {
+        const found = findGroupEl(label);
+        if (found) return found;
+        const el = document.createElement("tab-group");
+        el.setAttribute("label", label);
+        const firstTab = tabStrip.querySelector("tab:not([pinned])") || tabStrip.lastChild;
+        tabStrip.insertBefore(el, firstTab && firstTab.parentElement === tabStrip ? firstTab : null);
+        existing.push(el);
+        return el;
+      };
+
+      for (const group of grouped.groups) {
+        const name = sanitizeGroupName(group.name);
+        const container = ensureGroupEl(name);
+        for (const id of group.tabs) {
+          const t = movableTabs.find((x) => x.id === id);
+          if (t?.tab) container.appendChild(t.tab);
+        }
+      }
+      return { applied: true, via: "tab-group" };
+    }
+
     log("info", "ATG not detected; reordering tabs only");
     reorderByGroups(movableTabs, grouped.groups);
     return { applied: true, via: "reorder" };

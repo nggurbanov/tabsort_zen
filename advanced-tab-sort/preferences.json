@@ -1,42 +1,215 @@
-{
-  "id": "advanced-tab-sort",
-  "name": "Advanced Tab Sort",
-  "version": "0.1.0",
-  "description": "AI-assisted tab grouping for Zen (Gemini, OpenAI, Ollama, Firefox local).",
-  "preferences": {
-    "provider": "openai",
-    "includePageText": false,
-    "maxCharsPerTab": 800,
-    "maxGroups": 8,
-    "mergeExisting": true,
-    "renameGroups": false,
-    "dryRun": false,
-    "autoSortOnNewTabs": false,
-    "burstThreshold": 5,
-    "idleDelayMs": 800,
-    "timeoutMs": 15000,
-    "logLevel": "info",
-    "openai": {
-      "apiKey": "",
-      "baseUrl": "https://api.openai.com/v1/chat/completions",
-      "model": "gpt-4o-mini",
-      "temperature": 0.2
-    },
-    "gemini": {
-      "apiKey": "",
-      "baseUrl": "https://generativelanguage.googleapis.com/v1beta/models",
-      "model": "gemini-1.5-pro",
-      "temperature": 0.2
-    },
-    "ollama": {
-      "host": "http://localhost:11434",
-      "model": "llama3",
-      "temperature": 0.2
-    },
-    "firefoxLocal": {
-      "model": "zen-local-llm",
-      "temperature": 0.0
-    }
+[
+  {
+    "type": "text",
+    "label": "⚙️ Advanced Tab Sort",
+    "margin": "16px 0",
+    "size": "18px"
+  },
+  {
+    "type": "dropdown",
+    "property": "provider",
+    "label": "Provider",
+    "value": "string",
+    "default": "openai",
+    "options": [
+      { "label": "OpenAI", "value": "openai" },
+      { "label": "Gemini", "value": "gemini" },
+      { "label": "Ollama (local)", "value": "ollama" },
+      { "label": "Firefox Local", "value": "firefox-local" }
+    ]
+  },
+  {
+    "type": "checkbox",
+    "property": "includePageText",
+    "label": "Include page text (may send content to remote AI)",
+    "default": false
+  },
+  {
+    "type": "number",
+    "property": "maxCharsPerTab",
+    "label": "Max characters per tab (when including text)",
+    "default": 800,
+    "min": 0,
+    "max": 4000
+  },
+  {
+    "type": "number",
+    "property": "maxGroups",
+    "label": "Max groups",
+    "default": 8,
+    "min": 1,
+    "max": 30
+  },
+  {
+    "type": "checkbox",
+    "property": "mergeExisting",
+    "label": "Respect existing groups when possible",
+    "default": true
+  },
+  {
+    "type": "checkbox",
+    "property": "renameGroups",
+    "label": "Allow renaming groups",
+    "default": false
+  },
+  {
+    "type": "checkbox",
+    "property": "dryRun",
+    "label": "Dry run (preview only)",
+    "default": false
+  },
+  {
+    "type": "checkbox",
+    "property": "autoSortOnNewTabs",
+    "label": "Auto-sort after bursts of new tabs",
+    "default": false
+  },
+  {
+    "type": "number",
+    "property": "burstThreshold",
+    "label": "Burst threshold",
+    "default": 5,
+    "min": 1,
+    "max": 50
+  },
+  {
+    "type": "number",
+    "property": "idleDelayMs",
+    "label": "Idle delay (ms) before auto-sort",
+    "default": 800,
+    "min": 100,
+    "max": 10000
+  },
+  {
+    "type": "number",
+    "property": "timeoutMs",
+    "label": "Request timeout (ms)",
+    "default": 15000,
+    "min": 2000,
+    "max": 60000
+  },
+  {
+    "type": "dropdown",
+    "property": "logLevel",
+    "label": "Log level",
+    "value": "string",
+    "default": "info",
+    "options": [
+      { "label": "Error", "value": "error" },
+      { "label": "Warn", "value": "warn" },
+      { "label": "Info", "value": "info" },
+      { "label": "Debug", "value": "debug" }
+    ]
+  },
+  {
+    "type": "separator",
+    "label": "OpenAI",
+    "margin": "12px 0"
+  },
+  {
+    "type": "string",
+    "property": "openai.apiKey",
+    "label": "API Key",
+    "default": ""
+  },
+  {
+    "type": "string",
+    "property": "openai.baseUrl",
+    "label": "Base URL",
+    "default": "https://api.openai.com/v1/chat/completions"
+  },
+  {
+    "type": "string",
+    "property": "openai.model",
+    "label": "Model",
+    "default": "gpt-4o-mini"
+  },
+  {
+    "type": "number",
+    "property": "openai.temperature",
+    "label": "Temperature",
+    "default": 0.2,
+    "step": 0.1,
+    "min": 0,
+    "max": 2
+  },
+  {
+    "type": "separator",
+    "label": "Gemini",
+    "margin": "12px 0"
+  },
+  {
+    "type": "string",
+    "property": "gemini.apiKey",
+    "label": "API Key",
+    "default": ""
+  },
+  {
+    "type": "string",
+    "property": "gemini.baseUrl",
+    "label": "Base URL",
+    "default": "https://generativelanguage.googleapis.com/v1beta/models"
+  },
+  {
+    "type": "string",
+    "property": "gemini.model",
+    "label": "Model",
+    "default": "gemini-1.5-pro"
+  },
+  {
+    "type": "number",
+    "property": "gemini.temperature",
+    "label": "Temperature",
+    "default": 0.2,
+    "step": 0.1,
+    "min": 0,
+    "max": 2
+  },
+  {
+    "type": "separator",
+    "label": "Ollama (local)",
+    "margin": "12px 0"
+  },
+  {
+    "type": "string",
+    "property": "ollama.host",
+    "label": "Host",
+    "default": "http://localhost:11434"
+  },
+  {
+    "type": "string",
+    "property": "ollama.model",
+    "label": "Model",
+    "default": "llama3"
+  },
+  {
+    "type": "number",
+    "property": "ollama.temperature",
+    "label": "Temperature",
+    "default": 0.2,
+    "step": 0.1,
+    "min": 0,
+    "max": 2
+  },
+  {
+    "type": "separator",
+    "label": "Firefox Local AI",
+    "margin": "12px 0"
+  },
+  {
+    "type": "string",
+    "property": "firefoxLocal.model",
+    "label": "Model",
+    "default": "zen-local-llm"
+  },
+  {
+    "type": "number",
+    "property": "firefoxLocal.temperature",
+    "label": "Temperature",
+    "default": 0.0,
+    "step": 0.1,
+    "min": 0,
+    "max": 2
   }
-}
+]
 

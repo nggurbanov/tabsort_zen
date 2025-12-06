@@ -1,7 +1,16 @@
 {
-  "id": "advanced-tab-sort-theme",
-  "name": "Advanced Tab Sort Theme Placeholder",
+  "id": "advanced-tab-sort",
+  "js": true,
+  "homepage": "https://github.com/nggurbanov/tabsort_zen",
+  "author": "tabsort_zen",
+  "name": "Advanced Tab Sort",
+  "description": "AI tab grouping for Zen with Advanced Tab Groups integration.",
   "version": "0.1.0",
-  "description": "Optional theme hooks for Advanced Tab Sort (currently empty)."
+  "createdAt": "2025-12-06",
+  "updatedAt": "2025-12-06",
+  "readme": "https://raw.githubusercontent.com/nggurbanov/tabsort_zen/main/advanced-tab-sort/README.md",
+  "image": "",
+  "tags": ["chrome", "js", "tabs", "ai"],
+  "fork": ["zen"]
 }
 

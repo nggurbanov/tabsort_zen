@@ -58,11 +58,46 @@
     }
   };
 
+  const unflattenPrefs = (obj) => {
+    const out = {};
+    Object.entries(obj || {}).forEach(([key, val]) => {
+      if (!key.includes(".")) {
+        out[key] = val;
+        return;
+      }
+      const parts = key.split(".");
+      let cur = out;
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        if (i === parts.length - 1) {
+          cur[part] = val;
+        } else {
+          cur[part] = cur[part] || {};
+          cur = cur[part];
+        }
+      }
+    });
+    return out;
+  };
+
+  const deepMerge = (base, extra) => {
+    const out = Array.isArray(base) ? [...base] : { ...base };
+    Object.entries(extra || {}).forEach(([k, v]) => {
+      if (v && typeof v === "object" && !Array.isArray(v)) {
+        out[k] = deepMerge(out[k] || {}, v);
+      } else {
+        out[k] = v;
+      }
+    });
+    return out;
+  };
+
   const loadPrefs = () => {
     if (prefsCache) return prefsCache;
     try {
       const fromSine = window?.Sine?.getPreferences?.(MOD_ID);
-      prefsCache = { ...DEFAULT_PREFS, ...(fromSine || {}) };
+      const normalized = unflattenPrefs(fromSine || {});
+      prefsCache = deepMerge(DEFAULT_PREFS, normalized);
     } catch (e) {
       console.warn(`[${MOD_ID}] falling back to default prefs`, e);
       prefsCache = { ...DEFAULT_PREFS };

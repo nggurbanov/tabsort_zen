@@ -1420,6 +1420,11 @@ const askAIForMultipleTopics = async (tabs) => {
       return;
     }
     try {
+      // Ensure styling class so CSS applies even on fallback hosts
+      if (!separator.classList.contains("pinned-tabs-container-separator")) {
+        separator.classList.add("pinned-tabs-container-separator");
+      }
+
       // --- Create and Insert SVG with SINGLE Path ---
       if (!separator.querySelector("svg.separator-line-svg")) {
         const svgNS = "http://www.w3.org/2000/svg";
@@ -1495,18 +1500,23 @@ const askAIForMultipleTopics = async (tabs) => {
   }
 
   function addSortButtonToAllSeparators() {
-    const separators = domCache.getSeparators();
-    if (separators.length > 0) {
-      separators.forEach(ensureSortButtonExists);
-      updateButtonsVisibilityState();
-    } else {
-      const periphery = document.querySelector(
-        "#tabbrowser-arrowscrollbox-periphery"
-      );
-      if (periphery && !periphery.querySelector("#sort-button")) {
-        ensureSortButtonExists(periphery);
-      }
-    }
+    const hosts = new Set();
+    domCache.getSeparators().forEach((s) => hosts.add(s));
+    const periphery = document.querySelector(
+      "#tabbrowser-arrowscrollbox-periphery"
+    );
+    const tabsToolbar = document.getElementById("TabsToolbar");
+    const vertical =
+      document.querySelector("#zen-vertical-tabs") ||
+      document.querySelector("#vertical-tabs") ||
+      document.querySelector(".vertical-tabs");
+    const tabstrip = document.getElementById("tabbrowser-tabs");
+
+    [periphery, tabsToolbar, vertical, tabstrip].forEach((h) => {
+      if (h) hosts.add(h);
+    });
+
+    hosts.forEach((host) => ensureSortButtonExists(host));
     updateButtonsVisibilityState();
   }
 

@@ -50,6 +50,7 @@
   const STYLE_ID = "advanced-tab-sort-style";
   const CMD_ID = "cmd_advancedTabSort";
   const HOTKEY = { key: "S", altKey: true, shiftKey: true };
+  const FLOATING_BUTTON_ID = "advanced-tab-sort-fab";
 
   const log = (level, ...args) => {
     try {
@@ -322,6 +323,32 @@
         align-items: center;
         justify-content: center;
       }
+      #${FLOATING_BUTTON_ID} {
+        position: fixed;
+        bottom: 18px;
+        right: 18px;
+        z-index: 999999;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--zen-colors-primary-foreground, #fff);
+        background: color-mix(in srgb, currentColor 18%, #111 60%);
+        border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+      }
+      #${FLOATING_BUTTON_ID}:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      }
+      #${FLOATING_BUTTON_ID}:active {
+        transform: translateY(1px);
+      }
     `;
     document.documentElement.appendChild(style);
     window.addEventListener(
@@ -331,22 +358,21 @@
     );
   };
 
+  const findTabstripHost = () => {
+    const periphery = document.getElementById("tabbrowser-arrowscrollbox-periphery");
+    const newTab = document.getElementById("new-tab-button");
+    const tabsToolbar = document.getElementById("TabsToolbar");
+    const separators = Array.from(document.querySelectorAll(".pinned-tabs-container-separator"));
+    const tabstrip = document.getElementById("tabbrowser-tabs");
+    const vertical = document.querySelector("#vertical-tabs, .vertical-tabs, #zen-vertical-tabs");
+    return periphery || newTab?.parentNode || tabsToolbar || separators?.[0] || vertical || tabstrip;
+  };
+
   const addTabstripButton = () => {
     const inject = () => {
       try {
         if (document.getElementById(TABSTRIP_BUTTON_ID)) return true;
-        const periphery = document.getElementById("tabbrowser-arrowscrollbox-periphery");
-        const newTab = document.getElementById("new-tab-button");
-        const tabsToolbar = document.getElementById("TabsToolbar");
-        const separators = Array.from(document.querySelectorAll(".pinned-tabs-container-separator"));
-        const tabstrip = document.getElementById("tabbrowser-tabs");
-
-        const host =
-          periphery ||
-          newTab?.parentNode ||
-          tabsToolbar ||
-          separators?.[0] ||
-          tabstrip;
+        const host = findTabstripHost();
 
         if (!host) {
           log("debug", "Tabstrip host not found; retrying later");
@@ -367,6 +393,39 @@
       setTimeout(retry, 250);
     };
     retry();
+  };
+
+  const startButtonObserver = () => {
+    const observer = new MutationObserver(() => {
+      if (document.getElementById(TABSTRIP_BUTTON_ID)) return;
+      const host = findTabstripHost();
+      if (host) addTabstripButton();
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    window.addEventListener(
+      "unload",
+      () => observer.disconnect(),
+      { once: true }
+    );
+  };
+
+  const addFloatingButton = () => {
+    if (document.getElementById(FLOATING_BUTTON_ID)) return;
+    injectStyles();
+    const btn = document.createElement("button");
+    btn.id = FLOATING_BUTTON_ID;
+    btn.setAttribute("title", "AI sort tabs into groups");
+    btn.textContent = "Sort Tabs";
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      sortTabs();
+    });
+    document.documentElement.appendChild(btn);
+    window.addEventListener(
+      "unload",
+      () => document.getElementById(FLOATING_BUTTON_ID)?.remove(),
+      { once: true }
+    );
   };
 
   const registerHotkey = () => {
@@ -619,6 +678,8 @@
     setupAutoSort();
     registerButton();
     addTabstripButton();
+    startButtonObserver();
+    addFloatingButton();
     registerHotkey();
     log("info", "Advanced Tab Sort loaded");
   });

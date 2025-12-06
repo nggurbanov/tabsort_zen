@@ -1,3 +1,8 @@
+// ==UserScript==
+// @name          Advanced Tab Sort
+// @description   AI-backed tab grouping with Advanced Tab Groups interop.
+// @version       0.2.2
+// ==/UserScript==
 // Advanced Tab Sort for Zen (Sine mod)
 // AI-backed tab grouping with Advanced Tab Groups interop.
 (() => {
@@ -331,23 +336,28 @@
     );
   };
 
+  const findTabstripHost = () => {
+    const periphery = document.getElementById("tabbrowser-arrowscrollbox-periphery");
+    const newTab = document.getElementById("new-tab-button");
+    const tabsToolbar = document.getElementById("TabsToolbar");
+    const separators = Array.from(document.querySelectorAll(".pinned-tabs-container-separator"));
+    const tabstrip = document.getElementById("tabbrowser-tabs");
+    const vertical = document.querySelector("#vertical-tabs, .vertical-tabs, #zen-vertical-tabs");
+    return (
+      periphery ||
+      newTab?.parentNode ||
+      tabsToolbar ||
+      separators?.[0] ||
+      vertical ||
+      tabstrip
+    );
+  };
+
   const addTabstripButton = () => {
     const inject = () => {
       try {
         if (document.getElementById(TABSTRIP_BUTTON_ID)) return true;
-        const periphery = document.getElementById("tabbrowser-arrowscrollbox-periphery");
-        const newTab = document.getElementById("new-tab-button");
-        const tabsToolbar = document.getElementById("TabsToolbar");
-        const separators = Array.from(document.querySelectorAll(".pinned-tabs-container-separator"));
-        const tabstrip = document.getElementById("tabbrowser-tabs");
-
-        const host =
-          periphery ||
-          newTab?.parentNode ||
-          tabsToolbar ||
-          separators?.[0] ||
-          tabstrip;
-
+        const host = findTabstripHost();
         if (!host) {
           log("debug", "Tabstrip host not found; retrying later");
           return false;
@@ -367,6 +377,22 @@
       setTimeout(retry, 250);
     };
     retry();
+  };
+
+  const startButtonObserver = () => {
+    const observer = new MutationObserver(() => {
+      if (document.getElementById(TABSTRIP_BUTTON_ID)) return;
+      const host = findTabstripHost();
+      if (host) {
+        addTabstripButton();
+      }
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    window.addEventListener(
+      "unload",
+      () => observer.disconnect(),
+      { once: true }
+    );
   };
 
   const registerHotkey = () => {
@@ -619,6 +645,7 @@
     setupAutoSort();
     registerButton();
     addTabstripButton();
+    startButtonObserver();
     registerHotkey();
     log("info", "Advanced Tab Sort loaded");
   });

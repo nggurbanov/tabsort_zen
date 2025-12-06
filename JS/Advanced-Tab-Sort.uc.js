@@ -45,6 +45,8 @@
 
   const LOG_LEVELS = { error: 0, warn: 1, info: 2, debug: 3 };
   let prefsCache = null;
+  const BUTTON_ID = "advanced-tab-sort-button";
+  const HOTKEY = { key: "S", altKey: true, shiftKey: true };
 
   const log = (level, ...args) => {
     try {
@@ -412,6 +414,42 @@
     return { grouped, ...result };
   };
 
+  const registerButton = () => {
+    try {
+      if (!window.CustomizableUI) return;
+      if (CustomizableUI.getWidget?.(BUTTON_ID)?.id === BUTTON_ID) return;
+      CustomizableUI.createWidget({
+        id: BUTTON_ID,
+        defaultArea: CustomizableUI.AREA_NAVBAR,
+        label: "AI Sort Tabs",
+        tooltiptext: "AI sort tabs into groups",
+        onCommand: () => sortTabs(),
+      });
+    } catch (e) {
+      log("warn", "Failed to register toolbar button", e);
+    }
+  };
+
+  const registerHotkey = () => {
+    const handler = (evt) => {
+      if (
+        evt.key?.toUpperCase() === HOTKEY.key &&
+        !!evt.altKey === HOTKEY.altKey &&
+        !!evt.shiftKey === HOTKEY.shiftKey &&
+        !evt.ctrlKey &&
+        !evt.metaKey
+      ) {
+        const target = evt.target;
+        if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+          return;
+        }
+        evt.preventDefault();
+        sortTabs();
+      }
+    };
+    window.addEventListener("keydown", handler, false);
+  };
+
   // Auto-sort on bursts of new tabs if enabled.
   const setupAutoSort = () => {
     const prefs = loadPrefs();
@@ -440,6 +478,8 @@
       getConfig: () => loadPrefs(),
     };
     setupAutoSort();
+    registerButton();
+    registerHotkey();
     log("info", "Advanced Tab Sort loaded");
   });
 })();

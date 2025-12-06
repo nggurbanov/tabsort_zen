@@ -18,12 +18,10 @@ AI-assisted tab grouping for Zen Browser that plays nicely with Advanced Tab Gro
 - Safety: `includePageText` (off by default), `maxCharsPerTab`, `maxGroups`, `mergeExisting`, `renameGroups`, `dryRun`.
 - Triggers: manual `sortNow()`, optional auto-sort on tab bursts or idle, debounced.
 
-## Manual command
-Open the browser console and run:
-```
-window.AdvancedTabSort?.sortNow({ dryRun: true })
-```
-Use `dryRun: false` to apply moves.
+## Quick triggers
+- Toolbar button: “AI Sort Tabs” (added to the nav bar; click to sort).
+- Hotkey: Alt + Shift + S (skips when typing in inputs).
+- Console: `window.AdvancedTabSort?.sortNow({ dryRun: true })` to preview; set `dryRun: false` to apply.
 
 ## Notes
 - Pinned tabs are never moved.

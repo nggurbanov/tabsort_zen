@@ -48,6 +48,7 @@
   const BUTTON_ID = "advanced-tab-sort-button";
   const TABSTRIP_BUTTON_ID = "advanced-tab-sort-tabstrip-button";
   const STYLE_ID = "advanced-tab-sort-style";
+  const CMD_ID = "cmd_advancedTabSort";
   const HOTKEY = { key: "S", altKey: true, shiftKey: true };
 
   const log = (level, ...args) => {
@@ -416,6 +417,23 @@
     return { grouped, ...result };
   };
 
+  const ensureCommand = () => {
+    try {
+      const commandSet = document.querySelector("commandset#zenCommandSet") || document.querySelector("commandset");
+      if (!commandSet) return;
+      if (commandSet.querySelector(`#${CMD_ID}`)) return;
+      const fragment = window.MozXULElement?.parseXULToFragment
+        ? window.MozXULElement.parseXULToFragment(`<command id="${CMD_ID}"/>`)
+        : null;
+      const cmd = fragment?.firstChild || document.createElement("command");
+      cmd.id = CMD_ID;
+      cmd.addEventListener("command", () => sortTabs());
+      commandSet.appendChild(cmd);
+    } catch (e) {
+      log("warn", "Failed to ensure command", e);
+    }
+  };
+
   const registerButton = () => {
     try {
       if (!window.CustomizableUI) return;
@@ -432,47 +450,85 @@
     }
   };
 
+  const buildTabstripButton = () => {
+    const icon = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M19 6l-2 12-6 2-6-2 2-12 6-2 6 2z" stroke="currentColor" stroke-width="1.5" />
+        <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    `;
+    const markup = `
+      <toolbarbutton id="${TABSTRIP_BUTTON_ID}"
+        class="advanced-tab-sort-button toolbarbutton-1 chromeclass-toolbar-additional"
+        command="${CMD_ID}"
+        tooltiptext="AI sort tabs into groups">
+        <hbox class="toolbarbutton-box" align="center">
+          <hbox class="ats-icon" align="center" pack="center">${icon}</hbox>
+          <label class="toolbarbutton-text" value="Sort" crop="right"/>
+        </hbox>
+      </toolbarbutton>
+    `;
+    if (window.MozXULElement?.parseXULToFragment) {
+      return window.MozXULElement.parseXULToFragment(markup).firstChild;
+    }
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = markup;
+    return wrapper.firstElementChild;
+  };
+
+  const injectStyles = () => {
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = `
+      #${TABSTRIP_BUTTON_ID} {
+        min-height: 26px;
+        margin-inline-start: 6px;
+        border-radius: 8px;
+        padding-inline: 8px 10px;
+        color: var(--zen-colors-primary-foreground, currentColor);
+        background: color-mix(in srgb, currentColor 8%, transparent);
+        border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+        transition: background 120ms ease, border-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+      }
+      #${TABSTRIP_BUTTON_ID}:hover {
+        background: color-mix(in srgb, currentColor 14%, transparent);
+        border-color: color-mix(in srgb, currentColor 20%, transparent);
+        box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent);
+      }
+      #${TABSTRIP_BUTTON_ID}:active {
+        transform: translateY(1px);
+        background: color-mix(in srgb, currentColor 18%, transparent);
+      }
+      #${TABSTRIP_BUTTON_ID} .ats-icon {
+        margin-inline-end: 6px;
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+    `;
+    document.documentElement.appendChild(style);
+    window.addEventListener(
+      "unload",
+      () => document.getElementById(STYLE_ID)?.remove(),
+      { once: true }
+    );
+  };
+
   const addTabstripButton = () => {
     const inject = () => {
       try {
         if (document.getElementById(TABSTRIP_BUTTON_ID)) return true;
-        const tabsToolbar = document.getElementById("TabsToolbar");
-        if (!tabsToolbar) return false;
+        const periphery = document.getElementById("tabbrowser-arrowscrollbox-periphery");
         const newTab = document.getElementById("new-tab-button");
-        const btn = document.createXULElement ? document.createXULElement("toolbarbutton") : document.createElement("toolbarbutton");
-        btn.id = TABSTRIP_BUTTON_ID;
-        btn.classList.add("toolbarbutton-1", "chromeclass-toolbar-additional");
-        btn.setAttribute("label", "Sort Tabs");
-        btn.setAttribute("tooltiptext", "AI sort tabs into groups");
-        btn.addEventListener("command", () => sortTabs());
-        const parent = newTab?.parentNode || tabsToolbar;
-        parent.insertBefore(btn, newTab ? newTab.nextSibling : null);
-
-        if (!document.getElementById(STYLE_ID)) {
-          const style = document.createElement("style");
-          style.id = STYLE_ID;
-          style.textContent = `
-            #${TABSTRIP_BUTTON_ID} {
-              min-height: 24px;
-              margin-inline-start: 6px;
-              border-radius: 6px;
-              padding-inline: 8px;
-              background: var(--toolbarbutton-hover-background, color-mix(in srgb, currentColor 10%, transparent));
-            }
-            #${TABSTRIP_BUTTON_ID}:hover {
-              background: color-mix(in srgb, currentColor 20%, transparent);
-            }
-          `;
-          document.documentElement.appendChild(style);
-        }
-        window.addEventListener(
-          "unload",
-          () => {
-            btn.remove();
-            document.getElementById(STYLE_ID)?.remove();
-          },
-          { once: true }
-        );
+        const tabsToolbar = document.getElementById("TabsToolbar");
+        const host = periphery || newTab?.parentNode || tabsToolbar;
+        if (!host) return false;
+        const btn = buildTabstripButton();
+        host.insertBefore(btn, newTab ? newTab.nextSibling : null);
+        injectStyles();
         return true;
       } catch (e) {
         log("warn", "Failed to add tabstrip button", e);
@@ -481,7 +537,7 @@
     };
     const retry = () => {
       if (inject()) return;
-      setTimeout(retry, 300);
+      setTimeout(retry, 250);
     };
     retry();
   };
@@ -533,6 +589,7 @@
       preview: () => sortTabs({ dryRun: true }),
       getConfig: () => loadPrefs(),
     };
+    ensureCommand();
     setupAutoSort();
     registerButton();
     addTabstripButton();

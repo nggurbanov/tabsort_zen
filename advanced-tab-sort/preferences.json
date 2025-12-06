@@ -1,0 +1,42 @@
+{
+  "id": "advanced-tab-sort",
+  "name": "Advanced Tab Sort",
+  "version": "0.1.0",
+  "description": "AI-assisted tab grouping for Zen (Gemini, OpenAI, Ollama, Firefox local).",
+  "preferences": {
+    "provider": "openai",
+    "includePageText": false,
+    "maxCharsPerTab": 800,
+    "maxGroups": 8,
+    "mergeExisting": true,
+    "renameGroups": false,
+    "dryRun": false,
+    "autoSortOnNewTabs": false,
+    "burstThreshold": 5,
+    "idleDelayMs": 800,
+    "timeoutMs": 15000,
+    "logLevel": "info",
+    "openai": {
+      "apiKey": "",
+      "baseUrl": "https://api.openai.com/v1/chat/completions",
+      "model": "gpt-4o-mini",
+      "temperature": 0.2
+    },
+    "gemini": {
+      "apiKey": "",
+      "baseUrl": "https://generativelanguage.googleapis.com/v1beta/models",
+      "model": "gemini-1.5-pro",
+      "temperature": 0.2
+    },
+    "ollama": {
+      "host": "http://localhost:11434",
+      "model": "llama3",
+      "temperature": 0.2
+    },
+    "firefoxLocal": {
+      "model": "zen-local-llm",
+      "temperature": 0.0
+    }
+  }
+}
+

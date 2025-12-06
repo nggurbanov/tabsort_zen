@@ -46,6 +46,8 @@
   const LOG_LEVELS = { error: 0, warn: 1, info: 2, debug: 3 };
   let prefsCache = null;
   const BUTTON_ID = "advanced-tab-sort-button";
+  const TABSTRIP_BUTTON_ID = "advanced-tab-sort-tabstrip-button";
+  const STYLE_ID = "advanced-tab-sort-style";
   const HOTKEY = { key: "S", altKey: true, shiftKey: true };
 
   const log = (level, ...args) => {
@@ -430,6 +432,47 @@
     }
   };
 
+  const addTabstripButton = () => {
+    try {
+      const bar = document.getElementById("TabsToolbar");
+      if (!bar || document.getElementById(TABSTRIP_BUTTON_ID)) return;
+      const btn = document.createXULElement("toolbarbutton");
+      btn.id = TABSTRIP_BUTTON_ID;
+      btn.classList.add("toolbarbutton-1");
+      btn.setAttribute("label", "Sort Tabs");
+      btn.setAttribute("tooltiptext", "AI sort tabs into groups");
+      btn.addEventListener("command", () => sortTabs());
+      bar.appendChild(btn);
+
+      if (!document.getElementById(STYLE_ID)) {
+        const style = document.createElement("style");
+        style.id = STYLE_ID;
+        style.textContent = `
+          #${TABSTRIP_BUTTON_ID} {
+            margin-inline-start: 6px;
+            border-radius: 6px;
+            padding-inline: 8px;
+            background: var(--toolbarbutton-hover-background, color-mix(in srgb, currentColor 10%, transparent));
+          }
+          #${TABSTRIP_BUTTON_ID}:hover {
+            background: color-mix(in srgb, currentColor 20%, transparent);
+          }
+        `;
+        document.documentElement.appendChild(style);
+      }
+      window.addEventListener(
+        "unload",
+        () => {
+          btn.remove();
+          document.getElementById(STYLE_ID)?.remove();
+        },
+        { once: true }
+      );
+    } catch (e) {
+      log("warn", "Failed to add tabstrip button", e);
+    }
+  };
+
   const registerHotkey = () => {
     const handler = (evt) => {
       if (
@@ -479,6 +522,7 @@
     };
     setupAutoSort();
     registerButton();
+    addTabstripButton();
     registerHotkey();
     log("info", "Advanced Tab Sort loaded");
   });

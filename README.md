@@ -19,8 +19,9 @@ AI-assisted tab grouping for Zen Browser that plays nicely with Advanced Tab Gro
 - Triggers: manual `sortNow()`, optional auto-sort on tab bursts or idle, debounced.
 
 ## Quick triggers
-- Toolbar button: “AI Sort Tabs” (added to the nav bar; click to sort).
-- Hotkey: Alt + Shift + S (skips when typing in inputs).
+- Tabstrip button: “Sort Tabs” appears at the end of the tab bar.
+- Toolbar button: “AI Sort Tabs” (nav bar).
+- Hotkey: Alt + Shift + S (ignored while typing).
 - Console: `window.AdvancedTabSort?.sortNow({ dryRun: true })` to preview; set `dryRun: false` to apply.
 
 ## Notes

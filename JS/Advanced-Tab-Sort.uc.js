@@ -380,7 +380,11 @@
         }
         const btn = buildTabstripButton();
         if (!btn) return false;
-        host.insertBefore(btn, newTab ? newTab.nextSibling : null);
+        const anchor = document.getElementById("new-tab-button");
+        host.insertBefore(
+          btn,
+          anchor && anchor.parentNode === host ? anchor.nextSibling : null
+        );
         injectStyles();
         return true;
       } catch (e) {

@@ -2,14 +2,14 @@
 // @ignorecache
 // @name          Zen Tidy Tabs (Extended)
 // @description   Tidy Tabs with ATG + OpenAI/Gemini/Ollama/local providers
-// @version       0.4.1
+// @version       0.4.2
 // ==/UserScript==
 
 (() => {
   const CONFIG = {
     SIMILARITY_THRESHOLD: 0.45,
     GROUP_SIMILARITY_THRESHOLD: 0.75,
-    MIN_TABS_FOR_SORT: 6, // This is the ammount of tabs for the button to show, not the ammount of tabs you need in a group
+    MIN_TABS_FOR_SORT: 1, // Show buttons as soon as there is any ungrouped tab
     DEBOUNCE_DELAY: 250,
     ANIMATION_DURATION: 800,
     CLEAR_ANIMATION_DURATION: 600,
@@ -1420,11 +1420,6 @@ const askAIForMultipleTopics = async (tabs) => {
       return;
     }
     try {
-      // Ensure styling class so CSS applies even on fallback hosts
-      if (!separator.classList.contains("pinned-tabs-container-separator")) {
-        separator.classList.add("pinned-tabs-container-separator");
-      }
-
       // --- Create and Insert SVG with SINGLE Path ---
       if (!separator.querySelector("svg.separator-line-svg")) {
         const svgNS = "http://www.w3.org/2000/svg";
@@ -1500,23 +1495,18 @@ const askAIForMultipleTopics = async (tabs) => {
   }
 
   function addSortButtonToAllSeparators() {
-    const hosts = new Set();
-    domCache.getSeparators().forEach((s) => hosts.add(s));
-    const periphery = document.querySelector(
-      "#tabbrowser-arrowscrollbox-periphery"
-    );
-    const tabsToolbar = document.getElementById("TabsToolbar");
-    const vertical =
-      document.querySelector("#zen-vertical-tabs") ||
-      document.querySelector("#vertical-tabs") ||
-      document.querySelector(".vertical-tabs");
-    const tabstrip = document.getElementById("tabbrowser-tabs");
-
-    [periphery, tabsToolbar, vertical, tabstrip].forEach((h) => {
-      if (h) hosts.add(h);
-    });
-
-    hosts.forEach((host) => ensureSortButtonExists(host));
+    const separators = domCache.getSeparators();
+    if (separators.length > 0) {
+      separators.forEach(ensureSortButtonExists);
+      updateButtonsVisibilityState();
+    } else {
+      const periphery = document.querySelector(
+        "#tabbrowser-arrowscrollbox-periphery"
+      );
+      if (periphery && !periphery.querySelector("#sort-button")) {
+        ensureSortButtonExists(periphery);
+      }
+    }
     updateButtonsVisibilityState();
   }
 

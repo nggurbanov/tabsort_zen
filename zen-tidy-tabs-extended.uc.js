@@ -2,7 +2,7 @@
 // @ignorecache
 // @name          Zen Tidy Tabs (Extended)
 // @description   Tidy Tabs with ATG + OpenAI/Gemini/Ollama/local providers
-// @version       0.4.2
+// @version       0.4.3
 // ==/UserScript==
 
 (() => {

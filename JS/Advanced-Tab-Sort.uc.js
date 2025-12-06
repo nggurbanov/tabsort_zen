@@ -338,8 +338,20 @@
         const periphery = document.getElementById("tabbrowser-arrowscrollbox-periphery");
         const newTab = document.getElementById("new-tab-button");
         const tabsToolbar = document.getElementById("TabsToolbar");
-        const host = periphery || newTab?.parentNode || tabsToolbar;
-        if (!host) return false;
+        const separators = Array.from(document.querySelectorAll(".pinned-tabs-container-separator"));
+        const tabstrip = document.getElementById("tabbrowser-tabs");
+
+        const host =
+          periphery ||
+          newTab?.parentNode ||
+          tabsToolbar ||
+          separators?.[0] ||
+          tabstrip;
+
+        if (!host) {
+          log("debug", "Tabstrip host not found; retrying later");
+          return false;
+        }
         const btn = buildTabstripButton();
         if (!btn) return false;
         host.insertBefore(btn, newTab ? newTab.nextSibling : null);

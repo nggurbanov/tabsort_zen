@@ -5,11 +5,13 @@
   "author": "tabsort_zen",
   "name": "Advanced Tab Sort",
   "description": "AI tab grouping for Zen with Advanced Tab Groups integration.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "createdAt": "2025-12-06",
   "updatedAt": "2025-12-07",
   "readme": "https://raw.githubusercontent.com/nggurbanov/tabsort_zen/main/README.md",
-  "image": "",
+  "style": "https://raw.githubusercontent.com/nggurbanov/tabsort_zen/main/userChrome.css",
+  "preferences": "https://raw.githubusercontent.com/nggurbanov/tabsort_zen/main/preferences.json",
+  "image": "https://raw.githubusercontent.com/nggurbanov/tabsort_zen/main/image.png",
   "tags": ["chrome", "js", "tabs", "ai"],
   "fork": ["zen"]
 }

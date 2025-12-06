@@ -1,7 +1,8 @@
 // ==UserScript==
 // @ignorecache
-// @name          Ai tab sort and tab clearer
-// @description    sorts tab and arrange them into tab groups
+// @name          Zen Tidy Tabs (Extended)
+// @description   Tidy Tabs with ATG + OpenAI/Gemini/Ollama/local providers
+// @version       0.4.1
 // ==/UserScript==
 
 (() => {

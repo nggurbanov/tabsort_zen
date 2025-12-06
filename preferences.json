@@ -1,7 +1,47 @@
-{
-  "type": "checkbox",
-  "label": "Enable AI",
-  "property": "browser.ml.enabled",
-  "force": true,
-  "defaultValue": true
-}
+[
+  {
+    "type": "text",
+    "label": "AI Provider",
+    "margin": "12px 0",
+    "size": "16px"
+  },
+  {
+    "type": "dropdown",
+    "property": "provider",
+    "label": "Provider",
+    "value": "string",
+    "default": "openai",
+    "options": [
+      { "label": "OpenAI", "value": "openai" },
+      { "label": "Gemini", "value": "gemini" },
+      { "label": "Ollama (local)", "value": "ollama" },
+      { "label": "Local (browser)", "value": "local" }
+    ]
+  },
+  {
+    "type": "separator",
+    "label": "OpenAI",
+    "margin": "8px 0"
+  },
+  { "type": "string", "property": "openai.apiKey", "label": "API Key", "default": "" },
+  { "type": "string", "property": "openai.baseUrl", "label": "Base URL", "default": "https://api.openai.com/v1/chat/completions" },
+  { "type": "string", "property": "openai.model", "label": "Model", "default": "gpt-4o-mini" },
+  { "type": "number", "property": "openai.temperature", "label": "Temperature", "default": 0.2, "step": 0.1, "min": 0, "max": 2 },
+  {
+    "type": "separator",
+    "label": "Gemini",
+    "margin": "8px 0"
+  },
+  { "type": "string", "property": "gemini.apiKey", "label": "API Key", "default": "" },
+  { "type": "string", "property": "gemini.baseUrl", "label": "Base URL", "default": "https://generativelanguage.googleapis.com/v1beta/models" },
+  { "type": "string", "property": "gemini.model", "label": "Model", "default": "gemini-1.5-pro" },
+  { "type": "number", "property": "gemini.temperature", "label": "Temperature", "default": 0.2, "step": 0.1, "min": 0, "max": 2 },
+  {
+    "type": "separator",
+    "label": "Ollama",
+    "margin": "8px 0"
+  },
+  { "type": "string", "property": "ollama.host", "label": "Host", "default": "http://localhost:11434" },
+  { "type": "string", "property": "ollama.model", "label": "Model", "default": "llama3" },
+  { "type": "number", "property": "ollama.temperature", "label": "Temperature", "default": 0.2, "step": 0.1, "min": 0, "max": 2 }
+]

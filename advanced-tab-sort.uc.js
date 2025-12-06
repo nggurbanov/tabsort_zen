@@ -18,6 +18,27 @@
     EMBEDDING_BATCH_SIZE: 5,
   };
 
+  const PROVIDER_CONFIG = {
+    provider: "openai", // openai | gemini | ollama | local
+    openai: {
+      apiKey: "",
+      baseUrl: "https://api.openai.com/v1/chat/completions",
+      model: "gpt-4o-mini",
+      temperature: 0.2,
+    },
+    gemini: {
+      apiKey: "",
+      baseUrl: "https://generativelanguage.googleapis.com/v1beta/models",
+      model: "gemini-1.5-pro",
+      temperature: 0.2,
+    },
+    ollama: {
+      host: "http://localhost:11434",
+      model: "llama3",
+      temperature: 0.2,
+    },
+  };
+
   // --- Globals & State ---
   let isSorting = false;
   let isClearing = false;
@@ -422,11 +443,143 @@
     }
   };
 
-  const askAIForMultipleTopics = async (tabs) => {
+  
+  const fetchWithTimeout = async (url, options = {}, timeoutMs = 15000) => {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      return res;
+    } finally {
+      clearTimeout(t);
+    }
+  };
+
+  const parseLLMGroups = (text) => {
+    if (!text) throw new Error("empty response");
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    if (start === -1 || end === -1) throw new Error("no JSON object found");
+    const json = text.slice(start, end + 1);
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed.groups)) throw new Error("missing groups");
+    return parsed.groups;
+  };
+
+
+  const llmGroupTabs = async (tabs) => {
+    const provider = PROVIDER_CONFIG.provider || "local";
+    if (provider === "local") return null;
+    const payload = tabs.map((tab, idx) => ({ id: idx, title: getTabTitle(tab) }));
+    const prompt = [
+      "You are grouping browser tabs by topic.",
+      "Return ONLY minified JSON like:",
+      '{"groups":[{"name":"<group>","tabs":[0,1]}]}',
+      "Rules:",
+      "- Use concise group names.",
+      "- Use tab indexes from the input array.",
+      "Input:",
+      JSON.stringify({ tabs: payload })
+    ].join("\n");
+
+    if (provider === "openai") {
+      const cfg = PROVIDER_CONFIG.openai;
+      if (!cfg.apiKey) throw new Error("OpenAI key missing");
+      const res = await fetchWithTimeout(
+        cfg.baseUrl,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${cfg.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: cfg.model,
+            temperature: cfg.temperature ?? 0.2,
+            messages: [{ role: "user", content: prompt }],
+          }),
+        },
+        15000
+      );
+      if (!res.ok) throw new Error(`OpenAI error ${res.status}`);
+      const data = await res.json();
+      const text = data?.choices?.[0]?.message?.content;
+      return parseLLMGroups(text);
+    }
+
+    if (provider === "gemini") {
+      const cfg = PROVIDER_CONFIG.gemini;
+      if (!cfg.apiKey) throw new Error("Gemini key missing");
+      const url = `${cfg.baseUrl}/${cfg.model}:generateContent?key=${encodeURIComponent(cfg.apiKey)}`;
+      const res = await fetchWithTimeout(
+        url,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: cfg.temperature ?? 0.2 },
+          }),
+        },
+        15000
+      );
+      if (!res.ok) throw new Error(`Gemini error ${res.status}`);
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
+      return parseLLMGroups(text);
+    }
+
+    if (provider === "ollama") {
+      const cfg = PROVIDER_CONFIG.ollama;
+      const url = `${cfg.host.replace(/\/$/, "")}/api/chat`;
+      const res = await fetchWithTimeout(
+        url,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: cfg.model,
+            stream: false,
+            messages: [{ role: "user", content: prompt }],
+            options: { temperature: cfg.temperature ?? 0.2 },
+          }),
+        },
+        15000
+      );
+      if (!res.ok) throw new Error(`Ollama error ${res.status}`);
+      const data = await res.json();
+      const text = data?.message?.content;
+      return parseLLMGroups(text);
+    }
+
+    return null;
+  };
+
+const askAIForMultipleTopics = async (tabs) => {
     if (!Array.isArray(tabs) || tabs.length === 0) return [];
 
     const validTabs = tabs.filter((tab) => tab?.isConnected);
     if (!validTabs.length) return [];
+
+    // If remote provider selected, delegate grouping to LLM
+    if (PROVIDER_CONFIG.provider && PROVIDER_CONFIG.provider !== "local") {
+      try {
+        const groups = await llmGroupTabs(validTabs);
+        if (Array.isArray(groups)) {
+          const out = [];
+          groups.forEach((g) => {
+            const topic = g.name || g.topic || "Other";
+            (g.tabs || []).forEach((idx) => {
+              const tab = validTabs[idx];
+              if (tab) out.push({ tab, topic });
+            });
+          });
+          if (out.length) return out;
+        }
+      } catch (e) {
+        console.error("[TabSort][AI] Remote grouping failed", e);
+      }
+    }
 
     // Get stored groups
     const storedGroups = getStoredGroups();
